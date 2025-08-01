@@ -1,271 +1,289 @@
-// ===== MAIN APPLICATION CLASS =====
+// GitHub Pages Compatible Version - No Backend Required
 class FloridaSignSolution {
     constructor() {
-        this.scrollPosition = 0;
-        this.isScrolling = false;
-        this.navbar = document.getElementById('mainNavbar');
-        this.observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-        this.intersectionObserver = new IntersectionObserver(this.handleIntersection.bind(this), this.observerOptions);
         this.init();
     }
-    // ===== INITIALIZATION =====
+
     init() {
         this.setupEventListeners();
-        this.initializeScrollAnimations();
-        this.initializeNavigation();
-        this.initializeFormValidation();
+        this.initializeAnimations();
         this.initializeParallaxEffects();
-        this.initializeTypewriterEffect();
-        console.log('Florida Sign Solution website initialized successfully!');
+        this.setupScrollEffects();
+        this.initializeCounters();
     }
+
     // ===== EVENT LISTENERS =====
     setupEventListeners() {
-        // Scroll events
-        window.addEventListener('scroll', this.throttle(this.handleScroll.bind(this), 16));
-        // Resize events
-        window.addEventListener('resize', this.debounce(this.handleResize.bind(this), 250));
-        // Navigation events
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', this.handleSmoothScroll.bind(this));
+        // Navigation
+        const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => this.handleNavClick(e));
         });
-        // Form events
+
+        // Buttons
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            button.addEventListener('mouseenter', (e) => this.handleButtonHover(e));
+            button.addEventListener('mouseleave', (e) => this.handleButtonLeave(e));
+        });
+
+        // Service cards
+        const serviceCards = document.querySelectorAll('.service-card');
+        serviceCards.forEach(card => {
+            card.addEventListener('mouseenter', (e) => this.handleServiceCardHover(e));
+            card.addEventListener('mouseleave', (e) => this.handleServiceCardLeave(e));
+        });
+
+        // Quote form
         const quoteForm = document.getElementById('quoteForm');
         if (quoteForm) {
-            quoteForm.addEventListener('submit', this.handleFormSubmit.bind(this));
+            quoteForm.addEventListener('submit', (e) => this.handleQuoteSubmit(e));
         }
-        // Button hover effects
-        document.querySelectorAll('.btn').forEach(button => {
-            button.addEventListener('mouseenter', this.handleButtonHover.bind(this));
-            button.addEventListener('mouseleave', this.handleButtonLeave.bind(this));
-        });
-        // Service card interactions
-        document.querySelectorAll('.service-card').forEach(card => {
-            card.addEventListener('mouseenter', this.handleServiceCardHover.bind(this));
-            card.addEventListener('mouseleave', this.handleServiceCardLeave.bind(this));
-        });
+
+        // Scroll events
+        window.addEventListener('scroll', () => this.handleScroll());
+        window.addEventListener('resize', () => this.handleResize());
     }
-    // ===== SCROLL HANDLING =====
-    handleScroll() {
-        const currentScroll = window.pageYOffset;
-        // Update navbar appearance
-        this.updateNavbar(currentScroll);
-        // Update scroll position
-        this.scrollPosition = currentScroll;
-        // Parallax effects
-        this.updateParallaxElements(currentScroll);
-        // Update active navigation link
-        this.updateActiveNavLink();
-    }
-    updateNavbar(scrollPosition) {
-        if (!this.navbar)
-            return;
-        if (scrollPosition > 100) {
-            this.navbar.classList.add('scrolled');
-        }
-        else {
-            this.navbar.classList.remove('scrolled');
-        }
-    }
-    updateActiveNavLink() {
-        const sections = document.querySelectorAll('section[id]');
-        const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
-        let currentSection = '';
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop - 100;
-            const sectionHeight = section.offsetHeight;
-            if (this.scrollPosition >= sectionTop && this.scrollPosition < sectionTop + sectionHeight) {
-                currentSection = section.getAttribute('id') || '';
-            }
-        });
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            const href = link.getAttribute('href');
-            if (href === `#${currentSection}`) {
-                link.classList.add('active');
-            }
-        });
-    }
-    // ===== SMOOTH SCROLLING =====
-    handleSmoothScroll(event) {
-        event.preventDefault();
-        const target = event.target;
-        const targetId = target.getAttribute('href');
+
+    // ===== NAVIGATION =====
+    handleNavClick(event) {
+        const targetId = event.target.getAttribute('href');
         if (targetId && targetId.startsWith('#')) {
+            event.preventDefault();
             const targetElement = document.querySelector(targetId);
             if (targetElement) {
-                const offsetTop = targetElement.offsetTop - 80; // Account for fixed navbar
+                // Dynamic offset based on screen size
+                let offset = 80;
+                if (window.innerWidth <= 575) {
+                    offset = 70;
+                } else if (window.innerWidth <= 767) {
+                    offset = 75;
+                } else if (window.innerWidth <= 991) {
+                    offset = 80;
+                }
+                
+                const offsetTop = targetElement.offsetTop - offset;
                 window.scrollTo({
                     top: offsetTop,
                     behavior: 'smooth'
                 });
-                // Close mobile menu if open
-                const navbarCollapse = document.querySelector('.navbar-collapse');
-                if (navbarCollapse === null || navbarCollapse === void 0 ? void 0 : navbarCollapse.classList.contains('show')) {
-                    const navbarToggler = document.querySelector('.navbar-toggler');
-                    navbarToggler === null || navbarToggler === void 0 ? void 0 : navbarToggler.click();
-                }
             }
         }
     }
-    // ===== INTERSECTION OBSERVER =====
-    initializeScrollAnimations() {
-        const animatedElements = document.querySelectorAll('.service-card, .portfolio-item, .contact-item');
-        animatedElements.forEach(element => {
-            element.classList.add('fade-in');
-            this.intersectionObserver.observe(element);
+
+    // ===== ANIMATIONS =====
+    initializeAnimations() {
+        // Fade in elements on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements
+        const animatedElements = document.querySelectorAll('.service-card, .portfolio-item, .about-content');
+        animatedElements.forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
         });
     }
-    handleIntersection(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                this.intersectionObserver.unobserve(entry.target);
-            }
-        });
-    }
-    // ===== FORM VALIDATION =====
-    initializeFormValidation() {
-        const forms = document.querySelectorAll('.needs-validation');
-        forms.forEach(form => {
-            const inputs = form.querySelectorAll('input, select, textarea');
-            inputs.forEach(input => {
-                input.addEventListener('blur', this.validateField.bind(this));
-                input.addEventListener('input', this.clearFieldError.bind(this));
+
+    // ===== COUNTERS =====
+    initializeCounters() {
+        const counters = document.querySelectorAll('.counter');
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    this.animateCounter(entry.target);
+                    counterObserver.unobserve(entry.target);
+                }
             });
         });
+
+        counters.forEach(counter => counterObserver.observe(counter));
     }
-    validateField(event) {
-        const field = event.target;
-        const isValid = field.checkValidity();
-        field.classList.remove('is-valid', 'is-invalid');
-        if (field.value.trim() !== '') {
-            field.classList.add(isValid ? 'is-valid' : 'is-invalid');
+
+    animateCounter(element) {
+        const target = parseInt(element.getAttribute('data-target'));
+        const duration = 2000;
+        const step = target / (duration / 16);
+        let current = 0;
+
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                element.textContent = target + '+';
+                clearInterval(timer);
+            } else {
+                element.textContent = Math.floor(current) + '+';
+            }
+        }, 16);
+    }
+
+    // ===== SCROLL EFFECTS =====
+    setupScrollEffects() {
+        const navbar = document.querySelector('.navbar');
+        if (navbar) {
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
         }
     }
-    clearFieldError(event) {
-        const field = event.target;
-        field.classList.remove('is-invalid');
+
+    handleScroll() {
+        // Add scroll-based animations here
+        const scrolled = window.pageYOffset;
+        const parallaxElements = document.querySelectorAll('.parallax');
+        
+        parallaxElements.forEach(element => {
+            const speed = element.dataset.speed || 0.5;
+            const yPos = -(scrolled * speed);
+            element.style.transform = `translateY(${yPos}px)`;
+        });
     }
-    async handleFormSubmit(event) {
+
+    handleResize() {
+        // Handle responsive adjustments
+        this.initializeParallaxEffects();
+    }
+
+    // ===== FORM HANDLING =====
+    async handleQuoteSubmit(event) {
         event.preventDefault();
-        const form = event.target;
-        const submitButton = form.querySelector('button[type="submit"]');
-        if (!form.checkValidity()) {
-            event.stopPropagation();
-            form.classList.add('was-validated');
-            return;
-        }
-        // Show loading state
-        submitButton.classList.add('loading');
-        submitButton.disabled = true;
+        
+        const submitButton = event.target.querySelector('button[type="submit"]');
+        const originalText = submitButton.textContent;
+        
         try {
-            const formData = this.getFormData(form);
-            await this.submitForm(formData);
-            // Show success message
-            this.showNotification('Quote request submitted successfully! We\'ll contact you soon.', 'success');
-            form.reset();
-            form.classList.remove('was-validated');
-        }
-        catch (error) {
-            console.error('Form submission error:', error);
-            this.showNotification('There was an error submitting your request. Please try again.', 'error');
-        }
-        finally {
-            // Remove loading state
-            submitButton.classList.remove('loading');
+            // Show loading state
+            submitButton.textContent = 'Sending...';
+            submitButton.disabled = true;
+            
+            // Get form data
+            const data = this.getFormData(event.target);
+            
+            // GitHub Pages Compatible Email Solutions:
+            // Option 1: EmailJS (Recommended)
+            await this.sendEmailViaEmailJS(data);
+            
+            // Option 2: Formspree (Alternative)
+            // await this.sendEmailViaFormspree(data);
+            
+            // Option 3: Netlify Forms (If using Netlify)
+            // await this.sendEmailViaNetlify(data);
+            
+            this.showNotification('Quote request sent successfully! We\'ll get back to you soon.', 'success');
+            event.target.reset();
+            
+        } catch (error) {
+            console.error('Error sending quote request:', error);
+            this.showNotification('Sorry, there was an error sending your request. Please try again or contact us directly.', 'error');
+        } finally {
+            // Reset button
+            submitButton.textContent = originalText;
             submitButton.disabled = false;
         }
     }
+
     getFormData(form) {
         const formData = new FormData(form);
         return {
-            firstName: document.getElementById('firstName').value,
-            lastName: document.getElementById('lastName').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            serviceType: document.getElementById('serviceType').value,
-            message: document.getElementById('message').value
+            firstName: formData.get('firstName'),
+            lastName: formData.get('lastName'),
+            email: formData.get('email'),
+            phone: formData.get('phone'),
+            serviceType: formData.get('serviceType'),
+            message: formData.get('message')
         };
     }
-    async submitForm(data) {
-        try {
-            // EmailJS configuration
-            const serviceID = 'service_florida_signs';
-            const templateID = 'template_quote_request';
-            const userID = 'your_emailjs_user_id';
-            // Prepare email template parameters
-            const templateParams = {
-                from_name: `${data.firstName} ${data.lastName}`,
-                from_email: data.email,
-                phone: data.phone,
-                service_type: data.serviceType,
-                message: data.message,
-                to_email: 'leandrosousa110490@yahoo.com',
-                reply_to: data.email,
-                subject: `New Quote Request from ${data.firstName} ${data.lastName}`,
-                email_body: `
-                    New quote request received:
-                    
-                    Name: ${data.firstName} ${data.lastName}
-                    Email: ${data.email}
-                    Phone: ${data.phone}
-                    Service Type: ${data.serviceType}
-                    Message: ${data.message}
-                    
-                    Please respond to this inquiry as soon as possible.
-                `
-            };
-            // Check if we're running on Node.js server (port 3000) or Python server (port 8000)
-            const isNodeServer = window.location.port === '3000';
-            
-            if (isNodeServer) {
-                // Use Node.js email service
-                const response = await fetch('/api/send-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        from: 'leandro.sousa1104@gmail.com',
-                        to: 'leandrosousa110490@yahoo.com',
-                        subject: `New Quote Request from ${data.firstName} ${data.lastName}`,
-                        html: `
-                            <h2>New Quote Request</h2>
-                            <p><strong>Name:</strong> ${data.firstName} ${data.lastName}</p>
-                            <p><strong>Email:</strong> ${data.email}</p>
-                            <p><strong>Phone:</strong> ${data.phone}</p>
-                            <p><strong>Service Type:</strong> ${data.serviceType}</p>
-                            <p><strong>Message:</strong></p>
-                            <p>${data.message}</p>
-                            <hr>
-                            <p><em>This email was sent from the Florida Sign Solution website contact form.</em></p>
-                        `
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to send email');
-                }
-                
-                console.log('Quote request sent successfully via email:', data);
-            } else {
-                // Demo mode - just log the data
-                console.log('Demo mode - Quote request data:', data);
-                console.log('To enable email functionality, please:');
-                console.log('1. Set up Gmail App Password in server.js');
-                console.log('2. Run: npm start (instead of Python server)');
-            }
+
+    // EmailJS Integration (Free tier: 200 emails/month)
+    async sendEmailViaEmailJS(data) {
+        // You need to:
+        // 1. Sign up at https://www.emailjs.com/
+        // 2. Create a service and template
+        // 3. Replace these IDs with your actual IDs
+        
+        // EmailJS Configuration (Replace with your actual IDs from EmailJS dashboard)
+        const serviceID = 'service_hvexey7';  // Your actual Service ID
+        const templateID = 'template_35tifu3'; // Your actual Template ID
+        const userID = 'LL0IKULgdWZ8Rfnkj'; // Get from EmailJS dashboard
+        
+        const templateParams = {
+            from_name: `${data.firstName} ${data.lastName}`,
+            from_email: 'leandro.sousa1104@gmail.com', // Fixed sender email
+            customer_email: data.email, // Customer's email for reference
+            phone: data.phone,
+            service_type: data.serviceType,
+            message: data.message,
+            to_email: 'leandrosousa110490@yahoo.com',
+            reply_to: data.email
+        };
+        
+        console.log('Sending email with parameters:', templateParams);
+        
+        // Check if EmailJS is available
+        if (typeof emailjs === 'undefined') {
+            console.error('EmailJS not loaded. Make sure to include EmailJS script in HTML.');
+            throw new Error('EmailJS not available');
         }
-        catch (error) {
-            console.error('Email sending error:', error);
-            // For demo purposes, we'll still show success
-            // In production, you would handle this error appropriately
-            console.log('Form data (demo mode):', data);
+        
+        try {
+            const result = await emailjs.send(serviceID, templateID, templateParams, userID);
+            console.log('Email sent successfully:', result);
+            return result;
+        } catch (error) {
+            console.error('EmailJS Error:', error);
+            throw error;
         }
     }
+
+    // Formspree Integration (Free tier: 50 submissions/month)
+    async sendEmailViaFormspree(data) {
+        // You need to:
+        // 1. Sign up at https://formspree.io/
+        // 2. Create a form and get your form ID
+        // 3. Replace 'YOUR_FORM_ID' with your actual form ID
+        
+        const formspreeURL = 'https://formspree.io/f/YOUR_FORM_ID';
+        
+        const response = await fetch(formspreeURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: `${data.firstName} ${data.lastName}`,
+                email: data.email,
+                phone: data.phone,
+                service: data.serviceType,
+                message: data.message
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to send email via Formspree');
+        }
+        
+        return response.json();
+    }
+
+
+
     // ===== NOTIFICATIONS =====
     showNotification(message, type) {
         const notification = document.createElement('div');
@@ -275,21 +293,26 @@ class FloridaSignSolution {
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
+        
         document.body.appendChild(notification);
+        
         // Auto remove after 5 seconds
         setTimeout(() => {
             notification.remove();
         }, 5000);
     }
+
     // ===== INTERACTIVE EFFECTS =====
     handleButtonHover(event) {
         const button = event.target;
         button.style.transform = 'translateY(-2px)';
     }
+
     handleButtonLeave(event) {
         const button = event.target;
         button.style.transform = 'translateY(0)';
     }
+
     handleServiceCardHover(event) {
         const card = event.target;
         const icon = card.querySelector('.service-icon');
@@ -297,6 +320,7 @@ class FloridaSignSolution {
             icon.style.transform = 'scale(1.1) rotate(5deg)';
         }
     }
+
     handleServiceCardLeave(event) {
         const card = event.target;
         const icon = card.querySelector('.service-icon');
@@ -304,6 +328,7 @@ class FloridaSignSolution {
             icon.style.transform = 'scale(1) rotate(0deg)';
         }
     }
+
     // ===== PARALLAX EFFECTS =====
     initializeParallaxEffects() {
         const heroSection = document.querySelector('.hero-section');
@@ -311,138 +336,14 @@ class FloridaSignSolution {
             heroSection.style.backgroundAttachment = 'fixed';
         }
     }
-    updateParallaxElements(scrollPosition) {
-        const parallaxElements = document.querySelectorAll('.floating-card');
-        parallaxElements.forEach(element => {
-            const speed = 0.5;
-            const yPos = -(scrollPosition * speed);
-            element.style.transform = `translateY(${yPos}px)`;
-        });
-    }
-    // ===== TYPEWRITER EFFECT =====
-    initializeTypewriterEffect() {
-        const heroTitle = document.querySelector('.hero-content h1');
-        if (heroTitle) {
-            const text = heroTitle.textContent || '';
-            heroTitle.textContent = '';
-            let index = 0;
-            const typeWriter = () => {
-                if (index < text.length) {
-                    heroTitle.textContent += text.charAt(index);
-                    index++;
-                    setTimeout(typeWriter, 50);
-                }
-            };
-            setTimeout(typeWriter, 1000);
-        }
-    }
-    // ===== NAVIGATION INITIALIZATION =====
-    initializeNavigation() {
-        // Mobile menu auto-close on scroll
-        window.addEventListener('scroll', () => {
-            const navbarCollapse = document.querySelector('.navbar-collapse');
-            if (navbarCollapse === null || navbarCollapse === void 0 ? void 0 : navbarCollapse.classList.contains('show')) {
-                const navbarToggler = document.querySelector('.navbar-toggler');
-                navbarToggler === null || navbarToggler === void 0 ? void 0 : navbarToggler.click();
-            }
-        });
-    }
-    // ===== UTILITY FUNCTIONS =====
-    throttle(func, limit) {
-        let inThrottle;
-        return function (...args) {
-            if (!inThrottle) {
-                func.apply(this, args);
-                inThrottle = true;
-                setTimeout(() => inThrottle = false, limit);
-            }
-        };
-    }
-    debounce(func, wait) {
-        let timeout;
-        return function (...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
-    }
-    handleResize() {
-        // Recalculate positions on resize
-        this.updateActiveNavLink();
-    }
 }
-// ===== ADDITIONAL UTILITY FUNCTIONS =====
-class AnimationUtils {
-    static fadeIn(element, duration = 300) {
-        return new Promise(resolve => {
-            element.style.opacity = '0';
-            element.style.display = 'block';
-            const start = performance.now();
-            const animate = (currentTime) => {
-                const elapsed = currentTime - start;
-                const progress = Math.min(elapsed / duration, 1);
-                element.style.opacity = progress.toString();
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                }
-                else {
-                    resolve();
-                }
-            };
-            requestAnimationFrame(animate);
-        });
-    }
-    static slideIn(element, direction = 'up', duration = 300) {
-        return new Promise(resolve => {
-            const transforms = {
-                left: 'translateX(-100%)',
-                right: 'translateX(100%)',
-                up: 'translateY(-100%)',
-                down: 'translateY(100%)'
-            };
-            element.style.transform = transforms[direction];
-            element.style.transition = `transform ${duration}ms ease-out`;
-            requestAnimationFrame(() => {
-                element.style.transform = 'translate(0, 0)';
-                setTimeout(() => {
-                    element.style.transition = '';
-                    resolve();
-                }, duration);
-            });
-        });
-    }
-}
-// ===== PERFORMANCE MONITORING =====
-class PerformanceMonitor {
-    constructor() {
-        this.metrics = {};
-    }
-    static getInstance() {
-        if (!PerformanceMonitor.instance) {
-            PerformanceMonitor.instance = new PerformanceMonitor();
-        }
-        return PerformanceMonitor.instance;
-    }
-    startTiming(label) {
-        this.metrics[label] = performance.now();
-    }
-    endTiming(label) {
-        if (this.metrics[label]) {
-            const duration = performance.now() - this.metrics[label];
-            console.log(`${label}: ${duration.toFixed(2)}ms`);
-            delete this.metrics[label];
-            return duration;
-        }
-        return 0;
-    }
-}
-// ===== INITIALIZATION =====
+
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    const monitor = PerformanceMonitor.getInstance();
-    monitor.startTiming('App Initialization');
     new FloridaSignSolution();
-    monitor.endTiming('App Initialization');
 });
-// ===== EXPORT FOR MODULE USAGE =====
+
+// Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { FloridaSignSolution, AnimationUtils, PerformanceMonitor };
+    module.exports = FloridaSignSolution;
 }
