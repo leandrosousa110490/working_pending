@@ -16,13 +16,37 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
+    
+    <style>
+        body {
+            padding-top: 80px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding-top: 70px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            body {
+                padding-top: 65px;
+            }
+        }
+        
+        .services-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 0;
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
         <div class="container">
-            <a class="navbar-brand" href="index.html">
-                <img src="images/logo.png" alt="Florida Sign Solution" class="navbar-logo">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <img src="images/logo.png" alt="Florida Sign Solution Logo" class="navbar-logo">
                 Florida Sign Solution
             </a>
             
@@ -47,16 +71,14 @@
                     <li class="nav-item">
                         <a class="nav-link" href="contact.html">Contact</a>
                     </li>
-                    <li class="nav-item ms-2">
-                        <a class="btn btn-primary btn-sm px-3" href="index.html#quote">Get Quote</a>
-                    </li>
+
                 </ul>
             </div>
         </div>
     </nav>
 
     <!-- Services Hero Section -->
-    <section class="services-hero py-5 mt-5">
+    <section class="services-hero">
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 mx-auto text-center">
